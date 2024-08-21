@@ -1,0 +1,22 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  width: 100%;
+}
+
+thead td{
+  font-weight: 700;
+}
+.color:nth-child(odd){   /*2n*/
+  background-color: rgb(58, 58, 58);
+  color: #fff;
+}
+.color:nth-child(even){  /*2n+1*/
+  background-color: rgb(83, 83, 83);
+  color:#fff;
+}
+.pointer {
+  cursor: pointer;
+}
