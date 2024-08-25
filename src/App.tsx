@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { SortBy, type User } from "./users.d"
-import { UserList } from "./components/UserList.js"
+import { UserList } from "./components/UserList"
+//import Infinity from "./components/Infinity"
+import { fetchApi } from "./services/fetchApi"
 import "./App.css"
 
 function App() {
@@ -10,19 +12,51 @@ function App() {
     const [sorting, setSorting] = useState<SortBy>(SortBy.NONE)
     const [filterCountry, setFilterCountry] = useState<string | null>(null)
 
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(false)
+    const [currentPage, setCurrentPage] = useState(1)
+
     const initialList = useRef<User[]>([])
 
+    //InfinityScroll
+    const lastItemRef = useRef<HTMLElement | null>(null)
+    const observer = useRef<IntersectionObserver | null>(null)
+
+    const observerCallback: IntersectionObserverCallback = (entries) => {
+        if (entries[0].isIntersecting && !loading) {
+            setCurrentPage((prev) => prev + 1)
+        }
+    }
     useEffect(() => {
-        fetch("https://randomuser.me/api/?results=100")
-            .then((res) => res.json())
+        if (!error) {
+            observer.current = new IntersectionObserver(observerCallback)
+            if (lastItemRef.current) {
+                observer.current.observe(lastItemRef.current)
+            }
+            return () => {
+                if (lastItemRef.current) {
+                    observer.current?.disconnect()
+                }
+            }
+        }
+    }, [lastItemRef])
+
+    useEffect(() => {
+        setLoading(true)
+        setError(false)
+        fetchApi(currentPage)
             .then((res) => {
-                setUsers(res.results)
-                initialList.current = res.results
+                setUsers((prev) => prev.concat(res))
+                initialList.current = initialList.current.concat(res)
             })
             .catch((error) => {
+                setError(error)
                 console.log(error)
             })
-    }, [])
+            .finally(() => {
+                setLoading(false)
+            })
+    }, [currentPage])
 
     const handleDelete = (email: string) => {
         const fiterUsers = users.filter((user) => user.email !== email)
@@ -72,10 +106,7 @@ function App() {
             return filterUsers.toSorted((a, b) =>
                 a.location.country.localeCompare(b.location.country)
             )
-        }
-        if (sorting === SortBy.NONE) return filterUsers
-        else 
-            return filterUsers
+        } else return filterUsers
     }, [filterUsers, sorting])
 
     return (
@@ -124,13 +155,29 @@ function App() {
                 </nav>
             </header>
             <main>
-                <UserList
-                    users={sortedUsers}
-                    handleDelete={handleDelete}
-                    color={colorMe}
-                    changeSorting={handleChangeSort}
-                />
+                {users.length > 0 && (
+                    <UserList
+                        users={sortedUsers}
+                        handleDelete={handleDelete}
+                        color={colorMe}
+                        changeSorting={handleChangeSort}
+                    />
+                )}
+                {loading && <p>Cargando ...</p>}
+                {error && <p>Ha habido un error</p>}
+                {!loading && !error && users.length === 0 && (
+                    <p>No hay usuarios</p>
+                )}
+                {!loading && !error && (
+                    <button onClick={() => setCurrentPage(currentPage + 1)}>
+                        Cargar más resultados
+                    </button>
+                )}
             </main>
+            <section ref={lastItemRef}></section>
+            {/* <section>
+                <Infinity />
+            </section> */}
         </>
     )
 }

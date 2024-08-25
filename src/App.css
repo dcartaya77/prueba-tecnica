@@ -20,3 +20,10 @@ thead td{
 .pointer {
   cursor: pointer;
 }
+tbody tr:hover{
+  background-color:blue !important;
+  color:white;
+}
+main{
+  min-height: 100vh;
+}
