@@ -1,29 +1,18 @@
 import { useMemo, useState } from "react"
-import { SortBy } from "./users.d"
 import { useGetUsers } from "./hooks/useGetUsers"
+import { useColor } from "./hooks/useColor"
 import { UserList } from "./components/UserList"
+import { useSorting } from "./hooks/useSorting"
+import { SortBy } from "./users.d"
 import "./App.css"
 
 function App() {
-    const [colorMe, setColor] = useState(false)
-    const [sorting, setSorting] = useState<SortBy>(SortBy.NONE)
     const [filterCountry, setFilterCountry] = useState<string | null>(null)
 
-    const { users, error, loading, handleDelete, toogleState, lastItemRef } = useGetUsers()
-
-    const toogleColor = () => {
-        setColor(!colorMe)
-    }
-
-    const toogleOrderByCountry = () => {
-        const newSorting =
-            sorting === SortBy.NONE ? SortBy.COUNTRY : SortBy.NONE
-        setSorting(newSorting)
-    }
-
-    const handleChangeSort = (sort: SortBy) => {
-        setSorting(sort)
-    }
+    const { users, error, loading, handleDelete, toogleState, lastItemRef } =
+        useGetUsers()
+    const { colorMe, toogleColor } = useColor()
+    const { sorting, toogleOrderByCountry, handleChangeSort } = useSorting()
 
     const filterUsers = useMemo(() => {
         return typeof filterCountry === "string" && filterCountry.length > 0
