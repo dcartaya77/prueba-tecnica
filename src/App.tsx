@@ -1,26 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { SortBy, type User } from "./users.d"
+import { SortBy } from "./users.d"
+import { useGetUsers } from "./hooks/useGetUsers"
 import { UserList } from "./components/UserList"
-//import Infinity from "./components/Infinity"
-import { fetchApi } from "./services/fetchApi"
 import "./App.css"
 
 function App() {
-    const [users, setUsers] = useState<User[]>([])
     const [colorMe, setColor] = useState(false)
-    //const [order, setOrder] = useState(false)
     const [sorting, setSorting] = useState<SortBy>(SortBy.NONE)
     const [filterCountry, setFilterCountry] = useState<string | null>(null)
-
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
 
-    const initialList = useRef<User[]>([])
+    const {error, users, loading, handleDelete, toogleState} = useGetUsers({currentPage})
 
     //InfinityScroll
     const lastItemRef = useRef<HTMLElement | null>(null)
     const observer = useRef<IntersectionObserver | null>(null)
+
 
     const observerCallback: IntersectionObserverCallback = (entries) => {
         if (entries[0].isIntersecting && !loading) {
@@ -39,42 +34,17 @@ function App() {
                 }
             }
         }
-    }, [lastItemRef])
-
-    useEffect(() => {
-        setLoading(true)
-        setError(false)
-        fetchApi(currentPage)
-            .then((res) => {
-                setUsers((prev) => prev.concat(res))
-                initialList.current = initialList.current.concat(res)
-            })
-            .catch((error) => {
-                setError(error)
-                console.log(error)
-            })
-            .finally(() => {
-                setLoading(false)
-            })
-    }, [currentPage])
-
-    const handleDelete = (email: string) => {
-        const fiterUsers = users.filter((user) => user.email !== email)
-        setUsers(fiterUsers)
-    }
+    }, [lastItemRef, loading])
+    //End InfinityScroll
 
     const toogleColor = () => {
         setColor(!colorMe)
     }
 
-    const toogleOrder = () => {
+    const toogleOrderByCountry = () => {
         const newSorting =
             sorting === SortBy.NONE ? SortBy.COUNTRY : SortBy.NONE
         setSorting(newSorting)
-    }
-
-    const toogleState = () => {
-        setUsers(initialList.current)
     }
 
     const handleChangeSort = (sort: SortBy) => {
@@ -130,7 +100,7 @@ function App() {
                             </button>
                         </li>
                         <li>
-                            <button onClick={toogleOrder}>
+                            <button onClick={toogleOrderByCountry}>
                                 {sorting === SortBy.COUNTRY
                                     ? "No ordenar"
                                     : "Ordenar por país"}
@@ -168,16 +138,8 @@ function App() {
                 {!loading && !error && users.length === 0 && (
                     <p>No hay usuarios</p>
                 )}
-                {!loading && !error && (
-                    <button onClick={() => setCurrentPage(currentPage + 1)}>
-                        Cargar más resultados
-                    </button>
-                )}
             </main>
-            <section ref={lastItemRef}></section>
-            {/* <section>
-                <Infinity />
-            </section> */}
+            <section ref={lastItemRef} className="lastitem"></section>
         </>
     )
 }
