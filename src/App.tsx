@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import { SortBy } from "./users.d"
 import { useGetUsers } from "./hooks/useGetUsers"
 import { UserList } from "./components/UserList"
@@ -8,34 +8,8 @@ function App() {
     const [colorMe, setColor] = useState(false)
     const [sorting, setSorting] = useState<SortBy>(SortBy.NONE)
     const [filterCountry, setFilterCountry] = useState<string | null>(null)
-    const [currentPage, setCurrentPage] = useState(1)
 
-    const {error, users, loading, handleDelete, toogleState} = useGetUsers({currentPage})
-
-    //InfinityScroll
-    const lastItemRef = useRef<HTMLElement | null>(null)
-    const observer = useRef<IntersectionObserver | null>(null)
-
-
-    const observerCallback: IntersectionObserverCallback = (entries) => {
-        if (entries[0].isIntersecting && !loading) {
-            setCurrentPage((prev) => prev + 1)
-        }
-    }
-    useEffect(() => {
-        if (!error) {
-            observer.current = new IntersectionObserver(observerCallback)
-            if (lastItemRef.current) {
-                observer.current.observe(lastItemRef.current)
-            }
-            return () => {
-                if (lastItemRef.current) {
-                    observer.current?.disconnect()
-                }
-            }
-        }
-    }, [lastItemRef, loading])
-    //End InfinityScroll
+    const { users, error, loading, handleDelete, toogleState, lastItemRef } = useGetUsers()
 
     const toogleColor = () => {
         setColor(!colorMe)
