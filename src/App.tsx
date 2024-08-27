@@ -1,46 +1,22 @@
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useGetUsers } from "./hooks/useGetUsers"
 import { useColor } from "./hooks/useColor"
 import { UserList } from "./components/UserList"
 import { useSorting } from "./hooks/useSorting"
+import { useSortedUsers } from "./hooks/useSortedUsers"
 import { SortBy } from "./users.d"
+import { useFilterInputCountry } from "./hooks/useFilterInputCountry"
 import "./App.css"
+
 
 function App() {
     const [filterCountry, setFilterCountry] = useState<string | null>(null)
 
-    const { users, error, loading, handleDelete, toogleState, lastItemRef } =
-        useGetUsers()
-    const { colorMe, toogleColor } = useColor()
+    const { users, error, loading, handleDelete, toogleState, lastItemRef } = useGetUsers()
     const { sorting, toogleOrderByCountry, handleChangeSort } = useSorting()
-
-    const filterUsers = useMemo(() => {
-        return typeof filterCountry === "string" && filterCountry.length > 0
-            ? users.filter((user) =>
-                  user.location.country
-                      .toLowerCase()
-                      .includes(filterCountry.toLowerCase())
-              )
-            : users
-    }, [filterCountry, users])
-
-    const sortedUsers = useMemo(() => {
-        if (sorting === SortBy.NAME) {
-            return filterUsers.toSorted((a, b) =>
-                a.name.first.localeCompare(b.name.first)
-            )
-        }
-        if (sorting === SortBy.LAST) {
-            return filterUsers.toSorted((a, b) =>
-                a.name.last.localeCompare(b.name.last)
-            )
-        }
-        if (sorting === SortBy.COUNTRY) {
-            return filterUsers.toSorted((a, b) =>
-                a.location.country.localeCompare(b.location.country)
-            )
-        } else return filterUsers
-    }, [filterUsers, sorting])
+    const { colorMe, toogleColor } = useColor()
+    const {filterUsers} = useFilterInputCountry({users, filterCountry})
+    const {sortedUsers} = useSortedUsers({sorting, filterUsers})
 
     return (
         <>
